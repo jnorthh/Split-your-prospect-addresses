@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prospect address splitter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fd;--ink:#1b1f3a;--mute:#5d6385;--glass:rgba(255,255,255,.62);--glass-b:rgba(255,255,255,.85);--line:rgba(60,70,140,.16);--field:rgba(255,255,255,.8);
+--g:linear-gradient(110deg,#3b6fe0,#8a5fd0 55%,#c4536a);--acc:#5b5fd6;--tint:rgba(110,95,215,.1);--warn:#a85a00;--warn-bg:rgba(255,190,90,.22);--ok:#1b6b3a;--o1:#8fb2ff;--o2:#c9a6ff;--o3:#ffb0c4;--shadow:0 20px 60px -20px rgba(70,70,160,.35);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0d1c;--ink:#eceefb;--mute:#9aa1c9;--glass:rgba(24,27,52,.55);--glass-b:rgba(255,255,255,.1);--line:rgba(255,255,255,.12);--field:rgba(255,255,255,.07);--g:linear-gradient(110deg,#7aa2ff,#b793ff 55%,#ff8fa8);--acc:#a9b4ff;--tint:rgba(150,140,255,.16);--warn:#f0b35c;--warn-bg:rgba(240,179,92,.16);--ok:#6fd195;--o1:#2f5bd9;--o2:#7b43d6;--o3:#c73e6c;--shadow:0 20px 60px -20px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b0d1c;--ink:#eceefb;--mute:#9aa1c9;--glass:rgba(24,27,52,.55);--glass-b:rgba(255,255,255,.1);--line:rgba(255,255,255,.12);--field:rgba(255,255,255,.07);--g:linear-gradient(110deg,#7aa2ff,#b793ff 55%,#ff8fa8);--acc:#a9b4ff;--tint:rgba(150,140,255,.16);--warn:#f0b35c;--warn-bg:rgba(240,179,92,.16);--ok:#6fd195;--o1:#2f5bd9;--o2:#7b43d6;--o3:#c73e6c;--shadow:0 20px 60px -20px rgba(0,0,0,.6);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:16px/1.55 "Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;position:relative;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.75;will-change:transform}
+.b1{width:55vmax;height:55vmax;left:-15vmax;top:-18vmax;background:var(--o1);animation:d1 26s ease-in-out infinite alternate}
+.b2{width:48vmax;height:48vmax;right:-14vmax;top:8vmax;background:var(--o2);animation:d2 32s ease-in-out infinite alternate}
+.b3{width:44vmax;height:44vmax;left:18vw;bottom:-22vmax;background:var(--o3);animation:d3 29s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(12vmax,9vmax) scale(1.12)}}
+@keyframes d2{to{transform:translate(-10vmax,12vmax) scale(.92)}}
+@keyframes d3{to{transform:translate(9vmax,-9vmax) scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.blob{animation:none}}
+main{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:56px 20px 40px}
+header{text-align:center;margin-bottom:34px}
+.mark{width:54px;height:54px;border-radius:18px;background:var(--g);display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 12px 30px -10px rgba(120,90,210,.7)}
+.mark svg{width:26px;height:26px}
+h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.1;margin:0 0 12px;font-weight:800;letter-spacing:-.03em;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+p.sub{margin:0 auto;color:var(--mute);max-width:56ch;font-size:1.05rem}
+.card{background:var(--glass);border:1px solid var(--glass-b);border-radius:26px;box-shadow:var(--shadow);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4)}
+.drop{display:block;position:relative;padding:44px 20px;text-align:center;cursor:pointer;transition:transform .2s ease,border-color .2s ease}
+.drop::after{content:"";position:absolute;inset:12px;border:2px dashed var(--line);border-radius:18px;pointer-events:none;transition:border-color .2s ease,background .2s ease}
+.drop:hover::after,.drop.over::after,.drop:focus-within::after{border-color:var(--acc);background:var(--tint)}
+.drop.over{transform:scale(1.01)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.up{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;background:var(--tint);display:grid;place-items:center}
+.up svg{width:24px;height:24px}
+.drop strong{display:block;font-size:1.15rem;font-weight:700}
+.drop span{color:var(--mute);font-size:.95rem}
+.panel{margin-top:22px;padding:24px}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:end;justify-content:space-between}
+label.l{display:block;font-size:.85rem;font-weight:600;color:var(--mute);margin-bottom:6px}
+select{font:inherit;font-weight:500;color:var(--ink);background-color:var(--field);border:1px solid var(--line);border-radius:999px;padding:11px 42px 11px 18px;min-width:240px;max-width:100%;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8fb5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+select option{color:#1b1f3a;background:#fff}
+button{font:inherit;font-weight:700;background:var(--g);color:#fff;border:0;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 12px 28px -10px rgba(120,90,210,.75);transition:transform .15s ease,box-shadow .15s ease}
+button:hover{transform:translateY(-2px);box-shadow:0 16px 32px -10px rgba(120,90,210,.85)}
+button:active{transform:translateY(0)}
+button:focus-visible,select:focus-visible,.drop:focus-within{outline:3px solid var(--acc);outline-offset:3px}
+.stats{margin:20px 0 0;color:var(--mute);font-size:.96rem}
+.stats b{color:var(--ink);font-weight:700}
+.flag{color:var(--warn)}
+.tw{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:16px;background:var(--field)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;white-space:nowrap}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+th{font-weight:700;color:var(--mute);font-size:.82rem}
+th.new{color:var(--acc);background:var(--tint)}
+td:nth-child(n+2){background:var(--tint)}
+tr.rev td{background:var(--warn-bg)}
+.msg{margin:14px 0 0;font-size:.92rem;font-weight:500}
+.msg.err{color:var(--warn)}
+.msg.ok{color:var(--ok)}
+.foot{position:relative;z-index:1;text-align:center;color:var(--mute);font-size:.85rem;margin:0;padding:0 20px 36px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div>
+<main>
+<header>
+  <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+  <h1>Split your prospect addresses</h1>
+  <p class="sub">Upload your prospects CSV and get a clean file back, with street address, city and state in their own columns. Your original columns stay untouched.</p>
+</header>
+
+<label class="drop card" id="drop">
+  <input type="file" id="file" accept=".csv,text/csv">
+  <div class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--acc)"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></div>
+  <strong>Drop your CSV here</strong>
+  <span id="fname">or click to browse your files</span>
+</label>
+
+<section class="panel card" id="panel" hidden>
+  <div class="row">
+    <div>
+      <label class="l" for="col">Address column to split</label>
+      <select id="col"></select>
+    </div>
+    <button id="dl" type="button">Download new CSV</button>
+  </div>
+  <p class="stats" id="stats"></p>
+  <p class="msg" id="msg" hidden></p>
+  <div class="tw"><table id="prev"></table></div>
+</section>
+</main>
+<p class="foot">Everything runs in your browser. Your file is never uploaded anywhere.</p>
+
+<script>
+(function(){
+  var NEW=["Street Address","City","State"];
+  var data=null,delim=",",fileName="prospects",out=null;
+  var $=function(i){return document.getElementById(i)};
+
+  function parseCSV(t){
+    if(t.charCodeAt(0)===0xFEFF)t=t.slice(1);
+    var first=t.split(/\r?\n/)[0]||"";
+    var sc=(first.match(/;/g)||[]).length,cc=(first.match(/,/g)||[]).length;
+    delim=sc>cc?";":",";
+    var rows=[],row=[],f="",q=false;
+    for(var i=0;i<t.length;i++){
+      var c=t[i];
+      if(q){
+        if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}
+        else f+=c;
+      }else if(c==='"')q=true;
+      else if(c===delim){row.push(f);f=""}
+      else if(c==="\n"||c==="\r"){
+        if(c==="\r"&&t[i+1]==="\n")i++;
+        row.push(f);f="";rows.push(row);row=[];
+      }else f+=c;
+    }
+    if(f!==""||row.length){row.push(f);rows.push(row)}
+    return rows.filter(function(r){return r.some(function(x){return x.trim()!==""})});
+  }
+
+  function esc(v){
+    v=v==null?"":String(v);
+    return (v.indexOf(delim)>-1||/["\r\n]/.test(v))?'"'+v.replace(/"/g,'""')+'"':v;
+  }
+
+  var COUNTRY=/^(usa|us|u\.s\.a?\.?|united states( of america)?|colombia)$/i;
+
+  function splitAddress(raw){
+    var s=(raw||"").replace(/[\r\n]+/g,", ").replace(/\s+/g," ").trim();
+    if(!s)return {street:"",city:"",state:"",ok:false};
+    var p=s.split(",").map(function(x){return x.trim()}).filter(Boolean);
+    if(p.length>=3&&COUNTRY.test(p[p.length-1]))p.pop();
+    var state="",m;
+    var last=p[p.length-1];
+    if(p.length>1||/\d{5}/.test(last)){
+      m=last.match(/^(.*?)\s*\d{5,6}(-\d{4})?$/);
+      if(m){
+        if(m[1]){p[p.length-1]=m[1]}else if(p.length>1){p.pop()}
+      }
+    }
+    if(p.length>=3){
+      state=p[p.length-1];
+      var city=p[p.length-2];
+      return fin(p.slice(0,-2).join(", "),city,state);
+    }
+    if(p.length===2){
+      m=p[1].match(/^(.+?)\s+([A-Za-z]{2})$/);
+      if(m)return fin(p[0],m[1],m[2].toUpperCase());
+      return fin(p[0],p[1],"");
+    }
+    m=p[0].match(/^(.*\S)\s+([A-Z]{2})$/);
+    if(m)return fin(m[1],"",m[2]);
+    return fin(p[0],"","");
+  }
+  function fin(a,b,c){return {street:a,city:b,state:c,ok:!!(a&&b&&c)}}
+
+  function uniqueHeaders(h){
+    var low=h.map(function(x){return x.trim().toLowerCase()});
+    return NEW.map(function(n){
+      var name=n;
+      if(low.indexOf(name.toLowerCase())>-1)name=n+" (split)";
+      return name;
+    });
+  }
+
+  function build(){
+    var h=data[0],idx=+$("col").value;
+    var nh=uniqueHeaders(h),res=[],bad=0,flags=[];
+    for(var r=1;r<data.length;r++){
+      var row=data[r].slice();
+      while(row.length<h.length)row.push("");
+      var s=splitAddress(row[idx]);
+      if(!s.ok&&(row[idx]||"").trim())bad++;
+      flags.push(!s.ok&&(row[idx]||"").trim()!=="");
+      res.push(row.concat([s.street,s.city,s.state]));
+    }
+    out={header:h.concat(nh),rows:res,flags:flags,nh:nh,idx:idx};
+    render(bad);
+  }
+
+  function render(bad){
+    var o=out,html="<thead><tr>"+
+      "<th>"+x(o.header[o.idx])+"</th>"+
+      o.nh.map(function(n){return '<th class="new">'+x(n)+"</th>"}).join("")+"</tr></thead><tbody>";
+    var shown=0;
+    for(var i=0;i<o.rows.length&&shown<8;i++,shown++){
+      var r=o.rows[i],n=r.length;
+      html+='<tr'+(o.flags[i]?' class="rev"':'')+"><td>"+x(r[o.idx])+"</td><td>"+x(r[n-3])+"</td><td>"+x(r[n-2])+"</td><td>"+x(r[n-1])+"</td></tr>";
+    }
+    $("prev").innerHTML=html+"</tbody>";
+    $("stats").innerHTML="<b>"+o.rows.length+"</b> prospects processed"+(bad?'. <span class="flag"><b>'+bad+"</b> rows could not be fully split (highlighted if visible below). Check those in the new file.</span>":". All addresses split cleanly.")+" Preview shows the first 8 rows.";
+  }
+  function x(v){return String(v==null?"":v).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+  function load(file){
+    if(!file)return;
+    $("fname").textContent=file.name;
+    fileName=file.name.replace(/\.csv$/i,"");
+    var rd=new FileReader();
+    rd.onload=function(){
+      var rows=parseCSV(String(rd.result));
+      if(rows.length<2){say("This file has no data rows.","err");$("panel").hidden=true;return}
+      data=rows;
+      var h=rows[0],sel=$("col");
+      sel.innerHTML=h.map(function(n,i){return '<option value="'+i+'">'+x(n||("Column "+(i+1)))+"</option>"}).join("");
+      var low=h.map(function(n){return n.trim().toLowerCase()});
+      var k=low.findIndex(function(n){return n.indexOf("home address")>-1});
+      if(k<0)k=low.findIndex(function(n){return n.indexOf("address")>-1});
+      if(k<0){say("No column named home address was found. Pick the right one from the list.","err")}else say("","");
+      sel.value=k<0?0:k;
+      $("panel").hidden=false;
+      build();
+    };
+    rd.readAsText(file);
+  }
+  function say(t,c){var m=$("msg");m.hidden=!t;m.textContent=t;m.className="msg "+(c||"")}
+
+  $("file").addEventListener("change",function(e){load(e.target.files[0])});
+  $("col").addEventListener("change",build);
+  var d=$("drop");
+  ["dragover","dragenter"].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add("over")})});
+  ["dragleave","drop"].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove("over")})});
+  d.addEventListener("drop",function(e){load(e.dataTransfer.files[0])});
+
+  $("dl").addEventListener("click",async function(){
+    if(!out)return;
+    var lines=[out.header.map(esc).join(delim)].concat(out.rows.map(function(r){return r.map(esc).join(delim)}));
+    var csv="\uFEFF"+lines.join("\r\n")+"\r\n";
+    try{
+      var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+      var url=URL.createObjectURL(blob);
+      var link=document.createElement("a");
+      link.href=url;link.download=fileName+"-split.csv";
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},2000);
+      say("File saved to your downloads.","ok");
+    }catch(e){say("The file could not be saved. Try again.","err")}
+  });
+})();
+</script>
+</body>
+</html>
